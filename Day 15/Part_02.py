@@ -5,11 +5,18 @@ def least_risk_path():
 	y_length = len(risks)
 	x_length = len(risks[0])
 	shortest_paths = [(0, (0, 0))]
+	visited_paths = {(0, 0) : (None, 0)}
 	visited = set()
 	while shortest_paths:
 		risk_total, (y, x) = heappop(shortest_paths)
 		if y == y_length-1 and x == x_length-1:
-			return risk_total
+			path = []
+			current_cave = (y, x)
+			while current_cave is not None:
+				path.append(current_cave)
+				current_cave = visited_paths[current_cave][0]
+			path = path[::-1]
+			return (path, risk_total)
 		if (y, x) in visited:
 			continue
 		visited.add((y, x))
@@ -27,6 +34,11 @@ def least_risk_path():
 			new_risk_total = risks[j][i] + risk_total
 			if cave not in visited:
 				heappush(shortest_paths, (new_risk_total, cave))
+				if cave not in visited_paths:
+					visited_paths[cave] = ((y, x), new_risk_total)
+				else:
+					if visited_paths[cave][1] >= new_risk_total:
+						visited_paths[cave] = ((y, x), new_risk_total)
 
 with open('Risk Map.txt', 'r') as my_file:
 	risks = my_file.readlines()
@@ -47,5 +59,17 @@ for v in range(4):
 for v in range(4):
 	for y in vertical_updated_risks[v]:
 		risks.append(y)
-least_risk_total = least_risk_path()
+path,least_risk_total = least_risk_path()
+for p in path:
+	y = p[0]
+	x = p[1]
+	risks[y][x] = '\033[92m\033[1m'+str(risks[y][x])+'\033[0m'
+# This is to print path through map in bold numbers.
+# Some command shells might not be able to produce bold numbers instead shows ANSI code.
+# Use "risks[y][x] = '='" above if the output contains ANSI code. This shows path indicated by character '='.
+print("Least risk path through map:\n")
+for y in risks:
+	for x in y:
+		print(x, end = '')
+	print('')
 print(f"\nRisk total of least risk path in updated map is {least_risk_total}.")
